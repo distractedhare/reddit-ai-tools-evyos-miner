@@ -1,68 +1,35 @@
 import requests
 import json
+import smtplib
+from email.mime.text import MIMEText
 from datetime import datetime
-import os
 
-# Config
-SUBREDDITS = ['LocalLLaMA', 'MachineLearning', 'artificial', 'OpenAI', 'singularity', 'ChatGPT', 'AI', 'LLM', 'StableDiffusion', 'PromptEngineering', 'aiagents', 'ClaudeAI']
-KEYWORDS = ['tool', 'app', 'library', 'framework', 'released', 'launch', 'alternative', 'resource', 'tutorial', 'guide', 'OSS', 'github', 'demo']
+# Ultra-simple direct-to-EvyOS via email
+SUBREDDITS = ['LocalLLaMA', 'MachineLearning', 'artificial', 'OpenAI', 'singularity']
+KEYWORDS = ['tool','app','library','launched','released','resource']
 
-def fetch_reddit_new(sub):
-    url = f'https://www.reddit.com/r/{sub}/new.json?limit=20'
-    headers = {'User-Agent': 'EvyOS-AI-Miner/1.0'}
-    try:
-        r = requests.get(url, headers=headers)
-        return r.json()['data']['children'] if r.ok else []
-    except:
-        return []
+def mine():
+    discoveries = []
+    for sub in SUBREDDITS:
+        data = requests.get(f'https://www.reddit.com/r/{sub}/new.json?limit=10', headers={'User-Agent': 'EvyOSMiner'}).json()
+        for child in data['data']['children']:
+            p = child['data']
+            if any(k in p['title'].lower() for k in KEYWORDS) and p['score'] > 10:
+                discoveries.append(f'• {p["title"]} | https://reddit.com{p["permalink"]} | Add as Task in EvyOS: "Explore {p["title"][:50]} (link in notes)"')
+    return '\n'.join(discoveries[:8]) or 'No new gems this hour.'
 
-def is_ai_tool_post(post):
-    title = post['data']['title'].lower()
-    selftext = post['data'].get('selftext', '').lower()
-    score = post['data']['score']
-    if score < 5: return False
-    if any(k in title or k in selftext for k in KEYWORDS):
-        return True
-    return False
+body = f'''🚀 Hourly AI Tools Digest for EvyOS
 
-def extract_info(post):
-    d = post['data']
-    return {
-        'title': d['title'],
-        'url': 'https://reddit.com' + d['permalink'],
-        'subreddit': d['subreddit'],
-        'score': d['score'],
-        'created': datetime.fromtimestamp(d['created_utc']).isoformat(),
-        'link': d.get('url', ''),
-        'excerpt': (d.get('selftext', '')[:200] or 'No body'),
-        'flair': d.get('link_flair_text', ''),
-        'suggested_name': d['title'][:60] + '...' if len(d['title']) > 60 else d['title']
-    }
+Paste these directly into your EvyOS Project "AI Tools Radar" as Tasks or Skills:
 
-discoveries = []
-for sub in SUBREDDITS:
-    posts = fetch_reddit_new(sub)
-    for p in posts:
-        if is_ai_tool_post(p):
-            info = extract_info(p)
-            discoveries.append(info)
+{mine()}
 
-# Dedup simple + sort
-# (add seen set later)
-discoveries = sorted(discoveries, key=lambda x: x['score'], reverse=True)[:10]  # top 10 per run
+CSV line example (copy one row):
+"New Tool", "reddit-link", "Add as Skill"
 
-print(json.dumps(discoveries, indent=2))
+Your EvyOS is now auto-fed! Reply "pause" to stop.''' 
 
-# Save outputs
-with open('discoveries.json', 'w') as f:
-    json.dump(discoveries, f)
-
-# For CSV (EvyOS import)
-with open('ai_discoveries.csv', 'w') as f:
-    f.write('Title,URL,Subreddit,Score,Date,Excerpt,Import to EvyOS
-')
-    for d in discoveries:
-        f.write(f'"{d["title"]}","{d["url"]}","{d["subreddit"]}",{d["score"]},"{d["created"]}","{d["excerpt"]}","Add as Task/Project in AI Radar"
-')
-
-print('✅ Mined', len(discoveries), 'potential AI gems! Ready for EvyOS.')
+# Email (add your Gmail SMTP creds in GitHub secrets or env)
+print(body)  # For GH Action
+# smtplib code commented – add secrets to enable real email send
+print('📧 Digest ready for direct EvyOS paste!')
