@@ -1,9 +1,9 @@
-name: '🕒 Hourly Reddit AI Miner → EvyOS Feed'
+name: '🕐 Hourly Reddit+HN+X AI Miner → EvyOS Direct Paste'
 
 on:
   schedule:
     - cron: '0 * * * *'  # Every hour
-  workflow_dispatch:  # Manual trigger
+  workflow_dispatch:
 
 jobs:
   mine:
@@ -17,27 +17,27 @@ jobs:
           python-version: '3.12'
 
       - name: Install deps
-        run: pip install requests pandas
+        run: pip install requests
 
       - name: Run Miner
-        run: python miner.py > output.log
+        run: python miner.py > digest.log
         env:
-          # Add your secrets here later
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
+          # Optional for future Notion etc.
 
-      - name: Commit Discoveries
+      - name: Upload Digest Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: evyos-ai-digest
+          path: evyos_ai_digest.txt
+
+      - name: Commit log
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add discoveries.json ai_discoveries.csv output.log
-          git commit -m "🧠 Hourly AI discoveries $(date)" || echo "No changes"
-          git push
+          git add evyos_ai_digest.txt digest.log || true
+          git commit -m "🧠 Hourly AI tools digest for EvyOS" || echo "No new changes"
+          git push || echo "Push skipped"
 
-      - name: Upload CSV artifact (for EvyOS import)
-        uses: actions/upload-artifact@v4
-        with:
-          name: ai-discoveries-csv
-          path: ai_discoveries.csv
-
-      - name: Notify
-        run: echo '✅ Fed to Notion/CSV! Check repo + import to EvyOS Project "AI Tools"'
+      - name: Summary
+        run: echo 'Paste the digest from artifact or log directly into EvyOS!'

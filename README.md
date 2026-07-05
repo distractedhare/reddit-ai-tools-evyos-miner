@@ -1,26 +1,28 @@
-# Reddit AI Tools & Resources Miner for EvyOS
+# Reddit + HN + X AI Tools Miner for EvyOS
 
-🚀 **Fully working automation** that mines Reddit hourly for new AI tools, libraries, apps, papers & resources.
+**Ultra-minimal hourly automation** that watches Reddit, Hacker News, and X for new AI tools, libraries, agents, frameworks & resources — then gives you a **copy-paste block** ready for direct drop into your EvyOS project.
 
-**Runs every hour** via GitHub Actions ✅
-**Feeds discoveries** to Notion DB (easy copy/import to EvyOS) + CSV export for direct EvyOS import + Markdown summaries.
+**Zero manual imports or CSVs needed** — just paste the block into EvyOS as Tasks or a Note. Perfect for your "AI Tools Radar" project.
 
-## Quick Start
-1. ⭐ Star this repo
-2. Add secrets in Settings > Secrets and variables > Actions:
-   - `REDDIT_USER_AGENT` (optional)
-   - `NOTION_TOKEN` (your integration token)
-   - `NOTION_DATABASE_ID` (from your 🧠 AI Reddit Discoveries DB)
-   - Optional: `OPENAI_API_KEY` or Grok key for smarter summaries
-3. Enable workflow in Actions tab
-4. In EvyOS: Create Project "AI Tools Radar" → Import CSV or paste from Notion/Drive
+## Quick Start (2-3 mins)
+1. Fork or use this repo
+2. Go to Settings > Secrets and variables > Actions and add:
+   - `X_BEARER_TOKEN` (free! Create at https://developer.x.com → Apps → create Project/App → copy Bearer Token. Basic recent search is free tier.)
+   - (Optional) Gmail SMTP if you want auto-email instead of checking Actions log
+3. Enable the workflow (Actions tab → enable)
+4. In EvyOS: Create Project "AI Tools Radar" or a dedicated Note. Every hour, open the latest Actions run → copy the big "EvyOS AI Tools Radar - Hourly Digest" block → paste straight in.
 
 ## How it works
-- Polls 12+ top AI subreddits + Reddit search for "AI tool" etc.
-- Filters high-signal posts (upvotes, keywords, no spam)
-- Extracts structured data with simple logic (extendable with LLM)
-- Appends to Notion + commits CSV/MD
+- Pulls fresh posts from top AI subs on Reddit (public JSON)
+- Scans new HN stories via official Firebase API (no key)
+- Searches recent X posts via official API v2 (Bearer Token, free tier)
+- Filters for high-signal AI/tool/launch keywords + engagement
+- Outputs one clean paste-ready block with links and suggested EvyOS Task text
 
-Clone & customize in 2 mins! Fork recommended.
+**Your EvyOS now has a live AI discovery feed with almost zero effort.**
 
-**Your EvyOS is now auto-fed with fresh AI gold every hour 🔥**
+Tweak SUBREDDITS, KEYWORDS, X_QUERY in miner.py to match your interests. Add more sources easily.
+
+Run manually anytime from Actions tab. Let me know if you want email auto-send, Notion append, or Evy integration tweaks.
+
+Built for Branden @SchulzeBranden — keep building EvyOS! 🚀
