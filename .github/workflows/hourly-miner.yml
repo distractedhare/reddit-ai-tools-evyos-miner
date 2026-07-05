@@ -1,0 +1,43 @@
+name: '🕒 Hourly Reddit AI Miner → EvyOS Feed'
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Every hour
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  mine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install deps
+        run: pip install requests pandas
+
+      - name: Run Miner
+        run: python miner.py > output.log
+        env:
+          # Add your secrets here later
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+
+      - name: Commit Discoveries
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add discoveries.json ai_discoveries.csv output.log
+          git commit -m "🧠 Hourly AI discoveries $(date)" || echo "No changes"
+          git push
+
+      - name: Upload CSV artifact (for EvyOS import)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-discoveries-csv
+          path: ai_discoveries.csv
+
+      - name: Notify
+        run: echo '✅ Fed to Notion/CSV! Check repo + import to EvyOS Project "AI Tools"'
